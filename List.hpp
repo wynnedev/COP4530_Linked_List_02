@@ -14,7 +14,14 @@ template <typename T>
 typename List<T>::const_iterator& List<T>::const_iterator::operator++()
 {
     this->current = this->current->next;
-    return this;
+    return *this;
+}
+
+template <typename T>
+typename List<T>::iterator& List<T>::iterator::operator++()
+{
+    this->current = this->current->next;
+    return *this;
 }
 
 template <typename T>
@@ -26,14 +33,37 @@ typename List<T>::const_iterator List<T>::const_iterator::operator++(int)
 }
 
 template <typename T>
+typename List<T>::iterator List<T>::iterator::operator++(int)
+{
+    iterator old = *this;
+    ++(*this);
+    return old;
+}
+
+template <typename T>
 typename List<T>::const_iterator& List<T>::const_iterator::operator--()
 {
     this->current = this->current->prev;
-    return this;
+    return *this;
+}
+
+template <typename T>
+typename List<T>::iterator& List<T>::iterator::operator--()
+{
+    this->current = this->current->prev;
+    return *this;
 }
 
 template <typename T>
 typename List<T>::const_iterator List<T>::const_iterator::operator--(int)
+{
+    const_iterator old = *this;
+    --(*this);
+    return old;
+}
+
+template <typename T>
+typename List<T>::iterator List<T>::iterator::operator--(int)
 {
     const_iterator old = *this;
     --(*this);
@@ -66,8 +96,15 @@ T& List<T>::const_iterator::retrieve() const
 
 template <typename T>
 List<T>::iterator::iterator()
-{ }
+{ 
+    this->current = nullptr;
+}
 
+template <typename T>
+List<T>::iterator::iterator(Node *p)
+{ 
+    this->current = p;
+}
 
 template <typename T>
 void List<T>::init()
@@ -121,7 +158,6 @@ T& List<T>::back()
     return *--end();
 }
 
-///TODO push and pop function
 template <typename T>
 void List<T>::push_front(const T& val)
 {
@@ -158,8 +194,6 @@ void List<T>::pop_back()
     erase( --end());
 }
 
-
-
 template <typename T>
 const T& List<T>::back() const
 {
@@ -181,17 +215,17 @@ typename List<T>::const_iterator List<T>::begin() const
 template <typename T>
 typename List<T>::iterator List<T>::end()
 {
-    return ( tail->prev );
+    return ( tail );
 }
 
 template <typename T>
 typename List<T>::const_iterator List<T>::end() const
 {
-    return ( tail->prev );
+    return ( tail );
 }
 
 template <typename T>
-typename List<T>::iterator List<T>::insert( iterator itr, const T& val)
+typename List<T>::iterator List<T>::insert( List<T>::iterator itr, const T& val)
 {
     Node *p = itr.current;
     theSize++;
@@ -199,7 +233,7 @@ typename List<T>::iterator List<T>::insert( iterator itr, const T& val)
 }
 
 template <typename T>
-typename List<T>::iterator List<T>::insert( iterator itr, T&& val)
+typename List<T>::iterator List<T>::insert( List<T>::iterator itr, T&& val)
 {
     Node *p = itr.current;
     theSize++;
@@ -217,6 +251,28 @@ typename List<T>::iterator List<T>::erase(iterator itr)
     --theSize;
 
     return retVal;
+}
+
+template <typename T>
+void List<T>::remove(const T& val)
+{
+    for ( List<T>::iterator itr = begin(); itr != end(); ++itr)
+    {
+        if(itr.current->data == val)
+        {
+            itr = erase(itr);
+        }
+    }
+}
+
+template <typename T>
+void List<T>::print(std::ostream& os, char ofc) const
+{
+    for ( const_iterator itr = begin(); itr != end();)
+    {
+        os << *itr << ofc;
+        ++itr;
+    }
 }
 
 template <typename T>
