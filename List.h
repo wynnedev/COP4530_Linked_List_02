@@ -139,7 +139,6 @@ namespace cop4530 {
           void init();           // initialization
     };
 
-   ///TODO implement comparison operators
    // overloading comparison operators
    template <typename T>
       bool operator==(const List<T> & lhs, const List<T> &rhs);
@@ -149,7 +148,19 @@ namespace cop4530 {
 
    // overloading output operator
    template <typename T>
-      std::ostream & operator<<(std::ostream &os, const List<T> &l);
+      std::ostream & operator<<(std::ostream &os, const List<T> &l)
+      {
+         auto current = l.begin();
+         auto end = l.end();
+
+         while(current != end)
+         {
+            os << *current << ' ';
+            ++current;
+         }
+
+         return os;
+      }
 
    // include the implementation file here
 

@@ -11,6 +11,12 @@ const T& List<T>::const_iterator::operator*() const
 }
 
 template <typename T>
+T& List<T>::iterator::operator*()
+{
+    return this->retrieve();
+}
+
+template <typename T>
 typename List<T>::const_iterator& List<T>::const_iterator::operator++()
 {
     this->current = this->current->next;
@@ -83,7 +89,7 @@ bool List<T>::const_iterator::operator!=(const const_iterator &rhs) const
 }
 
 template <typename T>
-List<T>::const_iterator::const_iterator(Node *p)
+List<T>::const_iterator::const_iterator(List<T>::Node *p)
 {
     current = p;
 }
@@ -101,7 +107,7 @@ List<T>::iterator::iterator()
 }
 
 template <typename T>
-List<T>::iterator::iterator(Node *p)
+List<T>::iterator::iterator(List<T>::Node *p)
 { 
     this->current = p;
 }
@@ -122,6 +128,102 @@ template <typename T>
 List<T>::List()
 {
     init();
+}
+
+template <typename T>
+List<T>::List(const_iterator start, const_iterator end)
+{
+    this->init();
+    while(start != end)
+    {
+        this->push_back(*start);
+        ++start;
+    }
+}
+
+template <typename T>
+List<T>::List(const List<T> &rhs)
+{
+    this->init();
+    for ( List<T>::iterator itr = begin(); itr != end();)
+    {   
+        this->push_back(*itr);
+        ++itr;
+    }
+}
+
+template <typename T>
+const List<T>& List<T>::operator=(const List<T> &rhs)
+{
+    this->clear();
+    for ( List<T>::const_iterator itr = rhs.begin(); itr != rhs.end();)
+    {   
+        this->push_back(*itr);
+        ++itr;
+    }
+
+    return *this;
+}
+
+template <typename T>
+List<T>& List<T>::operator= (std::initializer_list<T> iList)
+{
+    this->init();
+    auto start = iList.begin();
+    auto end = iList.end();
+
+    while(start != end)
+    {
+        this->push_back(*start);
+        ++start;
+    }
+    return *this;
+}
+
+template <typename T>
+List<T>::List(List<T> &&rhs)
+{
+    this->theSize = rhs.theSize;
+    this->head = rhs.head;
+    this->tail = rhs.tail;
+    rhs.theSize = 0;
+    rhs.head = nullptr;
+    rhs.tail = nullptr;
+}
+
+template <typename T>
+List<T>::List(int num, const T& val)
+{
+    this->init();
+
+    while(num--)
+    {
+        push_back(val);
+    }
+}
+
+template <typename T>
+List<T>::List(std::initializer_list<T> iList)
+{
+    this->init();
+    auto start = iList.begin();
+    auto end = iList.end();
+
+    while(start != end)
+    {
+        this->push_back(*start);
+        ++start;
+    }
+}
+
+template <typename T>
+List<T>& List<T>::operator=(List<T> &&rhs)
+{
+    std::cout << "List<T>& List<T>::operator=(List<T> &&rhs)" <<std::endl;
+    std::swap( theSize, rhs.theSize );
+    std::swap( head, rhs.head );
+    std::swap( tail, rhs.tail );
+    return *this;
 }
 
 template <typename T>
@@ -241,7 +343,7 @@ typename List<T>::iterator List<T>::insert( List<T>::iterator itr, T&& val)
 }
 
 template <typename T>
-typename List<T>::iterator List<T>::erase(iterator itr)
+typename List<T>::iterator List<T>::erase(List<T>::iterator itr)
 {
     Node *p = itr.current;
     iterator retVal{p->next};
@@ -256,13 +358,27 @@ typename List<T>::iterator List<T>::erase(iterator itr)
 template <typename T>
 void List<T>::remove(const T& val)
 {
-    for ( List<T>::iterator itr = begin(); itr != end(); ++itr)
+    auto current = this->begin();
+    auto end = this->end();
+
+    while(current != end)
     {
-        if(itr.current->data == val)
+        if(*current == val)
         {
-            itr = erase(itr);
+            std::cout << "Test Print Before:" << std::endl;
+            this->print(std::cout);
+            std::cout << std::endl;
+            current = erase(current);
+            this->print(std::cout);
+            std::cout << "\nTest Print End: " << std::endl;
         }
+        
+        else
+        {
+            ++current;
+        }  
     }
+    this->print(std::cout);
 }
 
 template <typename T>
@@ -276,14 +392,57 @@ void List<T>::print(std::ostream& os, char ofc) const
 }
 
 template <typename T>
-typename List<T>::iterator List<T>::erase(iterator start, iterator end)
+typename List<T>::iterator List<T>::erase(List<T>::iterator start, List<T>::iterator end)
 {
-    for ( iterator itr = start; itr != end; )
+    for ( List<T>::iterator itr = start; itr != end; )
     {
         itr = erase( itr );
     }
 
     return end;
+}
+
+template <typename T>
+void List<T>::clear()
+{
+    if(!empty())
+    {
+       erase(begin(), end()); 
+    }   
+}
+
+template <typename T>
+void List<T>::reverse()
+{
+    List<T>::iterator tail = end();
+    List<T>::iterator current = begin();
+    List<T> temp;
+
+    while(current != tail)
+    {
+        temp.push_front(*current);
+        current++;
+    }
+
+    *this = temp;
+}
+
+template <typename T>
+template <typename PREDICATE>
+void List<T>::remove_if(PREDICATE pred)
+{
+    for ( List<T>::iterator itr = begin(); itr != end(); )
+    {
+        if(pred(*itr))
+        {
+            itr = erase(itr);
+        }
+
+        else
+        {
+            ++itr;
+        }  
+    }
 }
 
 
@@ -294,17 +453,39 @@ List<T>::~List()
     delete tail;
 }
 
-
-
-
-/*template <typename T>
-typename List<T>::iterator List<T>:erase(iterator itr)
+template <typename T>
+bool operator==(const List<T> & lhs, const List<T> &rhs)
 {
-    List<T>::Node *p = itr.current;
-    List<T>::iterator retval(p->next);
-    p->prev->next = p->next;
-    p->next->prev = p->prev;
-    delete p;
-    --theSize;
-    return retval
-}*/
+    if(lhs.size() == rhs.size())
+    {
+        auto lhsStart = lhs.begin();
+        auto lhsEnd = lhs.end();
+        auto rhsStart = rhs.begin();
+
+
+        while(lhsStart != lhsEnd)
+        {
+            if(*lhsStart == *rhsStart)
+            {
+                ++lhsStart;
+                ++rhsStart;
+            }
+            
+            else
+            {
+                return false;
+            }  
+        }
+        return true;
+    }
+    return false;
+}
+
+template <typename T>
+bool operator!=(const List<T> & lhs, const List<T> &rhs)
+{
+    return !(lhs==rhs);
+}
+
+
+
